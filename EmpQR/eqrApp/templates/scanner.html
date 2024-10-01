@@ -1,6 +1,9 @@
 {% load qr_code %}{% load static %}
 <!-- <script src="{% static 'assets/default/js/jquery-3.6.0.min.js' %}"></script> -->
 <script src="{% static 'assets/instascan.min.js' %}"></script>
+
+<!-- CSS Config -->
+ 
 <style>
     #uni_modal .modal-footer {
         display: none
@@ -29,6 +32,9 @@
         left: 0;
     }
 </style>
+
+<!-- HTML Config -->
+
 <div class="container-fluid">
     <div id="scanner-holder" class="position-relative">
         <video id="scanner"></video>
@@ -37,7 +43,11 @@
         </div>
     </div>
 </div>
+
 <script>
+
+    // Initializes the Scanner & Stream Handling
+
     const args = {
         video: document.getElementById('scanner'),
         mirror: false
@@ -49,6 +59,9 @@
     };
 
     const scanner = new Instascan.Scanner(args);
+    
+    // Scab Listener: When a QR code is scanned, this listener triggers
+
     scanner.addListener('scan', function(content) {
         // alert(content);
         $('.modal').modal('hide')
@@ -58,6 +71,9 @@
             scanner.stop()
         }, 500)
     });
+
+    // Checks for available cameras. 
+
     $('#uni_modal').on('shown.bs.modal', function() {
         if ($('#scanner').length > 0) {
             scanner.stop()
