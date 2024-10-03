@@ -22,12 +22,8 @@
         <div class="row">
             <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
                 <dl>
-                    <!-- <dt>Employee Code</dt>
-                    <dd>{{employee.employee_code}}</dd> -->
                     <dt>Name</dt>
                     <dd>{{employee.name}}</dd>
-                    <!-- <dt>Department</dt>
-                    <dd>{{employee.department}}</dd> -->
                     <dt>Position</dt>
                     <dd>{{employee.position}}</dd>
                 </dl>
@@ -38,14 +34,6 @@
                     <dd>-</dd>
                     <dt>Time-Out</dt>
                     <dd>-</dd>
-                    <!-- <dt>Gender</dt>
-                    <dd>{{employee.gender}}</dd>
-                    <dt>Date of Birth</dt>
-                    <dd>{{employee.dob|date:'M d, Y'}}</dd>
-                    <dt>Contact #</dt>
-                    <dd>{{employee.contact}}</dd>
-                    <dt>Email</dt>
-                    <dd>{{employee.email}}</dd> -->
                 </dl>
             </div>
         </div>
@@ -58,33 +46,6 @@
     </div>
 </div>
 <script>
-    // var emp_edit_url = "{% url 'edit-employee' employee.pk %}"
-    // var emp_delete_url = "{% url 'delete-employee' employee.pk %}"
-    function updateTime(action) {
-        // Get the current time
-        var currentTime = new Date().toLocaleTimeString();
-
-        if (action === 'in') {
-            document.getElementById('time-in').innerText = currentTime;
-            // Optionally, send this data to the server via AJAX
-            // Example: sendDataToServer('in', currentTime);
-        } else if (action === 'out') {
-            document.getElementById('time-out').innerText = currentTime;
-            // Optionally, send this data to the server via AJAX
-            // Example: sendDataToServer('out', currentTime);
-        }
-    }
-
-    // Function to send data to the server (optional)
-    function sendDataToServer(action, time) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", action === 'in' ? emp_edit_url : emp_delete_url, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                console.log("Success:", xhr.responseText);
-            }
-        };
-        xhr.send(JSON.stringify({ time: time }));
-    }
+    var emp_edit_url = "{% url 'edit-employee' employee.pk %}"
+    var emp_delete_url = "{% url 'delete-employee' employee.pk %}"
 </script>
