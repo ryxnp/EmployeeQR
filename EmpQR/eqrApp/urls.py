@@ -23,4 +23,6 @@ urlpatterns = [
     path('view_details',views.view_details,name='scanned-code'),
     path('scanner',views.view_scanner,name='view-scanner'),
     path('delete_employee/<int:pk>',views.delete_employee,name='delete-employee'),
+    path('employee_attendance/<str:code>',views.employee_attendance,name='attendance_view'),
+    path('employee_attendance',views.employee_attendance,name='employee_attendance'),
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

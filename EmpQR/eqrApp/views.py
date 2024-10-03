@@ -153,3 +153,13 @@ def delete_employee(request, pk=None):
             resp['msg'] = "Employee has failed to delete."
 
     return HttpResponse(json.dumps(resp), content_type="application/json")
+
+@login_required
+def employee_attendance(request, code = None):
+    if code is None:
+        return HttpResponse("Employee code is Invalid")
+    else:
+        context = context_data()
+        context['employee'] = models.Employee.objects.get(employee_code=code)
+        return render(request, 'employee_attendance.html', context)
+

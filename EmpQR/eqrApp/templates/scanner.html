@@ -67,7 +67,7 @@
         $('.modal').modal('hide')
         start_loader()
         setTimeout(() => {
-            uni_modal("View Employee Details", "{% url 'scanned-code' %}/" + content, 'modal-md')
+            uni_modal("QR Attendance Tracker", "{% url 'employee_attendance' %}/" + content, 'modal-md')
             scanner.stop()
         }, 500)
     });
