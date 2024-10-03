@@ -39,6 +39,19 @@ class Employee(models.Model):
             imag.thumbnail(output_size)
             imag.save(self.avatar.path)
         
+class LogRecords(models.Model):
+    employee_code = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    time_in = models.DateTimeField()
+    time_out = models.DateTimeField()
+    date_created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee_code.first_name} {self.employee_code.last_name} - Time In: {self.time_in}, Time Out: {self.time_out}"
+    
+    def print_time(self):
+        """Return formatted string of time-in and time-out."""
+        return f"Time In: {self.time_in.strftime('%Y-%m-%d %H:%M:%S')}, Time Out: {self.time_out.strftime('%Y-%m-%d %H:%M:%S')}"
+    
 # @receiver(post_save, sender=Employee)
 # def create_qr(sender, instance, **kwargs):
 #     code = instance.employee_code
