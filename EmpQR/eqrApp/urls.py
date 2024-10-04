@@ -21,9 +21,13 @@ urlpatterns = [
     path('view_card/<int:pk>',views.view_card,name='view-card'),
     path('view_details/<str:code>',views.view_details,name='view-details'),
     path('view_details',views.view_details,name='scanned-code'),
+
+    path('view_record/<str:code>',views.view_record,name='view-records'),
+    path('view_record',views.view_record,name='show-record'),
+
     path('scanner',views.view_scanner,name='view-scanner'),
     path('delete_employee/<int:pk>',views.delete_employee,name='delete-employee'),
+
     path('employee_attendance/<str:code>',views.employee_attendance,name='attendance_view'),
     path('employee_attendance',views.employee_attendance,name='employee_attendance'),
-    path('log-attendance/<str:employee_code>/', views.log_attendance, name='log_attendance'),
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

@@ -10,14 +10,14 @@ from django.contrib.auth.decorators import login_required
 
 from django.http import JsonResponse
 from django.utils import timezone
-from .models import LogRecords, Employee
+from .models import LogRecord, Employee
 
 
 def context_data():
     context = {
         'page_name' : '',
         'page_title' : 'Chat Room',
-        'system_name' : 'Employee ID with QR Code Generator',
+        'system_name' : 'Employee Logs',
         'topbar' : True,
         'footer' : True,
     }
@@ -166,23 +166,21 @@ def employee_attendance(request, code = None):
         context['employee'] = models.Employee.objects.get(employee_code=code)
         return render(request, 'employee_attendance.html', context)
 
-def log_attendance(request, employee_code):
-    try:
-        employee = Employee.objects.get(employee_code=employee_code)
-        current_time = timezone.now()
-        
-        # Check if there is an existing record with time_in but no time_out
-        log_record = LogRecords.objects.filter(employee_code=employee).order_by('-date_created').first()
-        
-        if log_record and log_record.time_out is None:
-            # If there's an existing time-in record, set the time-out
-            log_record.time_out = current_time
-            log_record.save()
-            return JsonResponse({'status': 'success', 'message': f'Checked out at {current_time}'})
-        else:
-            # Create a new record for time-in
-            LogRecords.objects.create(employee_code=employee, time_in=current_time)
-            return JsonResponse({'status': 'success', 'message': f'Checked in at {current_time}'})
+@login_required
+def employee_record(request, code = None):
+    if code is None:
+        return HttpResponse("Employee record is Invalid")
+    else:
+        context = context_data()
+        context['employee'] = models.LogRecord.objects.get(employee_code=code)
+        return render(request, 'employee_attendance.html', context)
+
+@login_required
+def view_record(request, code = None):
+    if code is None:
+        return HttpResponse("Employee code is Invalid")
+    else:
+        context = context_data()
+        context['employee'] = models.LogRecord.objects.get(employee_code=code)
+        return render(request, 'view_record.html', context)
     
-    except Employee.DoesNotExist:
-        return JsonResponse({'status': 'error', 'message': 'Employee not found'})

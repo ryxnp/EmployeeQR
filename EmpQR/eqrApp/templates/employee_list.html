@@ -51,6 +51,7 @@
                                         <ul class="dropdown-menu" aria-labelledby="employeeDD{{employee.pk}}">
                                             <li><a class="dropdown-item view_detail" href="javascript:void(0)" data-url="{% url 'view-details' employee.employee_code %}" >View Data</a></li>
                                             <li><a class="dropdown-item view_card" href="javascript:void(0)" data-url="{% url 'view-card' employee.pk %}" >View ID</a></li>
+                                            <li><a class="dropdown-item view_card" href="javascript:void(0)" data-url="{% url 'view-records' employee.pk %}" >View Record</a></li>
                                         </ul>
                                     </div>
                                 </td>
