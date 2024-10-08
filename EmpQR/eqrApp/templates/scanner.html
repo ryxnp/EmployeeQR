@@ -69,6 +69,12 @@
     
     // Save the scanned content (which is the employee_code)
     const scannedData = content;
+    
+    const currentDateTime = new Date(); // This gets the current date and time
+    const formattedDateTime = currentDateTime.toLocaleString();
+
+// If you want to format it as a string, you can use toLocaleString or other methods
+    console.log("Current Date and Time:", formattedDateTime);
 
     // Log the scanned data for verification
     console.log("Scanned Employee Code:", scannedData);
