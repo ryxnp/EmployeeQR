@@ -64,12 +64,55 @@
 
     scanner.addListener('scan', function(content) {
         // alert(content);
-        $('.modal').modal('hide')
-        start_loader()
-        setTimeout(() => {
-            uni_modal("QR Attendance Tracker", "{% url 'employee_attendance' %}/" + content, 'modal-md')
-            scanner.stop()
-        }, 500)
+        scanner.addListener('scan', function(content) {
+    // Hide the modal
+    $('.modal').modal('hide');
+    start_loader();
+    
+    // Save the scanned content
+    const scannedData = content;
+
+    // Log the scanned data for verification
+    console.log("Scanned Data:", scannedData);
+
+    // Set a timeout to allow for any necessary loading
+    setTimeout(() => {
+        // Make an API call to fetch user information based on the scanned ID
+        fetch(`/api/employee/?id=${scannedData}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Log the fetched user data for verification
+                console.log("Fetched User Data:", data);
+                
+                // Check if necessary information is present and filter for specific user
+                const specificUser = data.find(user => user.employee_code === scannedData); // Adjust property as needed
+                
+                if (specificUser) {
+                    console.log("Specific User Information:", specificUser);
+                } else {
+                    console.warn("No matching user found for ID:", scannedData);
+                }
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            })
+            .finally(() => {
+                scanner.stop(); // Stop the scanner after processing
+                stop_loader(); // Stop loading animation if applicable
+            });
+    }, 500);
+});
+        // $('.modal').modal('hide')
+        // start_loader()
+        // setTimeout(() => {
+        //     uni_modal("QR Attendance Tracker", "{% url 'employee_attendance' %}/" + content, 'modal-md')
+        //     scanner.stop()
+        // }, 500)
     });
 
     // Checks for available cameras. 
