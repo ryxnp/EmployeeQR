@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'qr_code',
 
     'rest_framework',
+    'api',
 ]
 
 MIDDLEWARE = [

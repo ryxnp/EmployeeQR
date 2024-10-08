@@ -40,17 +40,17 @@ class Employee(models.Model):
             imag.save(self.avatar.path)
         
 class LogRecord(models.Model):
-    employee_code = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    time_in = models.DateTimeField()
-    time_out = models.DateTimeField()
+    employee_pk = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    action = models.BooleanField()
+    time = models.DateTimeField()
     date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.employee_code.first_name} {self.employee_code.last_name}"
+        return f"{self.employee_pk.first_name} {self.employee_pk.last_name}"
     
     def print_time(self):
         """Return formatted string of time-in and time-out."""
-        return f"Time In: {self.time_in.strftime('%Y-%m-%d %H:%M:%S')}, Time Out: {self.time_out.strftime('%Y-%m-%d %H:%M:%S')}"
+        return self.time.strftime('%H:%M:%S')
     
 # @receiver(post_save, sender=Employee)
 # def create_qr(sender, instance, **kwargs):

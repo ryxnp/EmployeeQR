@@ -7,12 +7,7 @@ from django.views.generic.base import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
 
-from .models import Employee
-from .views import EmployeeList, EmployeeDetail, EmployeeViewSet
-from rest_framework.routers import DefaultRouter
-
-router = DefaultRouter()
-router.register(r'employees', EmployeeViewSet)
+from api.views import EmployeeList, EmployeeDetail, LogRecordList, LogRecordDetail
 
 urlpatterns = [
     path('qr_code/', include('qr_code.urls', namespace="qr_code")),
@@ -37,7 +32,10 @@ urlpatterns = [
 
     path('employee_attendance/<str:code>',views.employee_attendance,name='attendance_view'),
     path('employee_attendance',views.employee_attendance,name='employee_attendance'),
-
-    path('employee/', EmployeeList.as_view(), name='employee-list'),
-    path('employee/<int:pk>/', EmployeeDetail.as_view(), name='employee-detail'),
+    
+    #API
+    path('api/employee/', EmployeeList.as_view(), name='employee-list'),
+    path('api/employee/<int:pk>/', EmployeeDetail.as_view(), name='employee-detail'),
+    path('api/logrecord/', LogRecordList.as_view(), name='logrecord-list'),
+    path('api/logrecord/<int:pk>/', LogRecordDetail.as_view(), name='logrecord-detail'),
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

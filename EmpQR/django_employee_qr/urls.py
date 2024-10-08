@@ -15,6 +15,8 @@ class UserViewSet(viewsets.ModelViewSet):
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 
+admin.site.site_header = 'Employee Records'
+admin.site.site_title = 'Employee Records'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
