@@ -7,6 +7,13 @@ from django.views.generic.base import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
 
+from .models import Employee
+from .views import EmployeeList, EmployeeDetail, EmployeeViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'employees', EmployeeViewSet)
+
 urlpatterns = [
     path('qr_code/', include('qr_code.urls', namespace="qr_code")),
     path('',views.home),
@@ -30,4 +37,7 @@ urlpatterns = [
 
     path('employee_attendance/<str:code>',views.employee_attendance,name='attendance_view'),
     path('employee_attendance',views.employee_attendance,name='employee_attendance'),
+
+    path('employee/', EmployeeList.as_view(), name='employee-list'),
+    path('employee/<int:pk>/', EmployeeDetail.as_view(), name='employee-detail'),
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
