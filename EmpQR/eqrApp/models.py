@@ -40,14 +40,19 @@ class Employee(models.Model):
             imag.save(self.avatar.path)
         
 class LogRecord(models.Model):
+    ACTION_CHOICES = [
+        ('time_in', 'Time In'),
+        ('time_out', 'Time Out'),
+    ]
+
     employee_pk = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    action = models.BooleanField()
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)  # Changed to CharField with choices
     time = models.DateTimeField()
     date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.employee_pk.first_name} {self.employee_pk.last_name}"
-    
+        return f"{self.employee_pk.first_name} {self.employee_pk.last_name} - {self.get_action_display()}"
+
     def print_time(self):
         """Return formatted string of time-in and time-out."""
         return self.time.strftime('%H:%M:%S')
