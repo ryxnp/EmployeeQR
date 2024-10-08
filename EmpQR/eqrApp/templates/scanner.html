@@ -63,22 +63,20 @@
     // Scab Listener: When a QR code is scanned, this listener triggers
 
     scanner.addListener('scan', function(content) {
-        // alert(content);
-        scanner.addListener('scan', function(content) {
     // Hide the modal
     $('.modal').modal('hide');
     start_loader();
     
-    // Save the scanned content
+    // Save the scanned content (which is the employee_code)
     const scannedData = content;
 
     // Log the scanned data for verification
-    console.log("Scanned Data:", scannedData);
+    console.log("Scanned Employee Code:", scannedData);
 
     // Set a timeout to allow for any necessary loading
     setTimeout(() => {
-        // Make an API call to fetch user information based on the scanned ID
-        fetch(`/api/employee/?id=${scannedData}`)
+        // Make an API call to fetch user information
+        fetch(`/api/employee/?employee_code=${scannedData}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -90,12 +88,32 @@
                 console.log("Fetched User Data:", data);
                 
                 // Check if necessary information is present and filter for specific user
-                const specificUser = data.find(user => user.employee_code === scannedData); // Adjust property as needed
+                const specificUser = data.find(user => user.employee_code === scannedData); // Match employee_code
                 
                 if (specificUser) {
                     console.log("Specific User Information:", specificUser);
+                    
+                    // Now fetch log records based on employee_pk (which corresponds to specificUser.id)
+                    return fetch(`/api/logrecord/?employee_pk=${specificUser.id}`)
+                        .then(logResponse => {
+                            if (!logResponse.ok) {
+                                throw new Error('Failed to fetch log records');
+                            }
+                            return logResponse.json();
+                        })
+                        .then(logData => {
+                            if (logData) {
+                                // Filter log records to only include those with the specific employee_pk
+                                const filteredLogRecords = logData.filter(record => record.employee_pk === specificUser.id);
+                                
+                                // Log the filtered log records for verification
+                                console.log("Filtered Log Records for Employee PK:", filteredLogRecords);
+                                
+                                // Further process filteredLogRecords as needed here
+                            }
+                        });
                 } else {
-                    console.warn("No matching user found for ID:", scannedData);
+                    console.warn("No matching user found for employee code:", scannedData);
                 }
             })
             .catch(error => {
@@ -113,7 +131,6 @@
         //     uni_modal("QR Attendance Tracker", "{% url 'employee_attendance' %}/" + content, 'modal-md')
         //     scanner.stop()
         // }, 500)
-    });
 
     // Checks for available cameras. 
 
