@@ -1,51 +1,75 @@
 {% load qr_code %}
 <style>
     #uni_modal .modal-footer {
-        display: none
+        display: none;
     }
-    
+
     #uni_modal .modal-sub-footer {
-        display: flex
+        display: flex;
     }
-    
+
     #card-qr,
     #card-avatar {
         width: 9rem;
         height: 9rem;
     }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
 </style>
 <div class="container-fluid" id="e-details">
-    <div class="d-flex w-100 justify-content-center my-4">
-        <img src="{% if employee.avatar %}{{employee.avatar.url}}{% endif %}" id="card-avatar" class="img-thumbnail" alt="">
-    </div>
     <div class="lh-1">
         <div class="row">
-            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-                <dl>
-                    <dt>Employee Code</dt>
-                    <dd>{{logrecord.employee_code}}</dd>
-                    <dt>Position</dt>
-                    <dd>{{employee.position}}</dd>
-                </dl>
-            </div>
-            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
-                <dl>
-                    <dt>Time-In</dt>
-                    <dd>{{logrecord.time_in}}</dd>
-                    <dt>Time-Out</dt>
-                    <dd>{{logrecord.time_out}}</dd>
-                </dl>
+            <div>
+                {% if logrecords %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Action</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for logrecord in logrecords %}
+                                <tr>
+                                    <td>{{ logrecord.date_created }}</td>
+                                    <td>{{ logrecord.action }}</td>
+                                    <td>{{ logrecord.time }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <dd>No log records found.</dd>
+                {% endif %}
             </div>
         </div>
-        <!-- <div class="row">
+        <!-- Uncomment this section if you want to add time-in/out buttons -->
+        <!-- 
+        <div class="row">
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                 <button id="btn-time-in" class="btn btn-primary" onclick="updateTime('in')">Record Time-In</button>
                 <button id="btn-time-out" class="btn btn-secondary" onclick="updateTime('out')">Record Time-Out</button>
             </div>
-        </div> -->
+        </div> 
+        -->
     </div>
 </div>
+
 <script>
-    // var emp_edit_url = "{% url 'edit-employee' employee.pk %}"
-    // var emp_delete_url = "{% url 'delete-employee' employee.pk %}"
+
 </script>

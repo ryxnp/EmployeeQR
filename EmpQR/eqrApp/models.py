@@ -8,7 +8,6 @@ import qrcode
 from PIL import Image
 from django.core.exceptions import ValidationError
 
-# Create your models here.
 class Employee(models.Model):
     employee_code = models.CharField(max_length=100, unique=True)
     first_name = models.CharField(max_length=250)
@@ -62,12 +61,5 @@ class LogRecord(models.Model):
     def print_time(self):
         """Return formatted string of time-in and time-out."""
         return self.time.strftime('%H:%M:%S')
-    
-# @receiver(post_save, sender=Employee)
-# def create_qr(sender, instance, **kwargs):
-#     code = instance.employee_code
-#     img = qrcode.make(code)
-#     instance.qr_path = img
-#     print(img)
-#     # instance.save()
+
 

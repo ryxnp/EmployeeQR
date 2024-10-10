@@ -7,10 +7,13 @@ from eqrApp import models, forms
 from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404
 
 from django.http import JsonResponse
-from django.utils import timezone
+import requests
 
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import localtime
 
 def context_data():
     context = {
@@ -157,28 +160,70 @@ def delete_employee(request, pk=None):
     return HttpResponse(json.dumps(resp), content_type="application/json")
 
 @login_required
-def employee_attendance(request, code = None):
-    if code is None:
+def view_record(request, pk=None):
+    if pk is None:
         return HttpResponse("Employee code is Invalid")
     else:
         context = context_data()
-        context['employee'] = models.Employee.objects.get(employee_code=code)
-        return render(request, 'employee_attendance.html', context)
-
-@login_required
-def employee_record(request, code = None):
-    if code is None:
-        return HttpResponse("Employee record is Invalid")
-    else:
-        context = context_data()
-        context['employee'] = models.LogRecord.objects.get(employee_code=code)
-        return render(request, 'employee_attendance.html', context)
-
-@login_required
-def view_record(request, code = None):
-    if code is None:
-        return HttpResponse("Employee code is Invalid")
-    else:
-        context = context_data()
-        context['employee'] = models.LogRecord.objects.get(employee_code=code)
+        # Use get_object_or_404 to handle missing records
+        context['logrecord'] = get_object_or_404(models.LogRecord, employee_pk=pk)
         return render(request, 'view_record.html', context)
+
+# @login_required
+# def view_record(request, pk = None):
+#     if pk is None:
+#         return HttpResponse("Employee code is Invalid")
+#     else:
+#         context = context_data()
+#         context['employee'] = models.Employee.objects.get(id=pk)
+#         return render(request, 'view_record.html', context)
+
+@login_required
+def view_record(request, pk=None):
+    if pk is None:
+        return JsonResponse({"error": "Employee code is Invalid"}, status=400)
+
+    # Define the API endpoints
+    employee_api_url = f"http://127.0.0.1:8000/api/employee/{pk}/"
+    logrecord_api_url = f"http://127.0.0.1:8000/api/logrecord/?employee_id={pk}"
+
+    try:
+        # Fetch employee details
+        employee_response = requests.get(employee_api_url)
+        employee_response.raise_for_status()  # Raise an error for bad responses
+        employee_data = employee_response.json()
+
+        # Fetch log records for the specific employee
+        logrecord_response = requests.get(logrecord_api_url)
+        logrecord_response.raise_for_status()
+        logrecords_data = logrecord_response.json()
+
+        # Filter log records by employee_pk (if needed)
+        filtered_logrecords = [
+            record for record in logrecords_data if record.get('employee_pk') == pk
+        ]
+
+        # Format dates and times for each log record
+        for record in filtered_logrecords:
+            record['date_created'] = format_datetime(record.get('date_created'))
+            record['time'] = format_datetime(record.get('time'))
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+    # Prepare context data for rendering
+    context = {
+        'employee': employee_data,
+        'logrecords': filtered_logrecords,  # Use the filtered records
+    }
+
+    return render(request, 'view_record.html', context)
+
+def format_datetime(datetime_str):
+    """Convert a datetime string to a formatted string."""
+    if datetime_str:
+        dt = parse_datetime(datetime_str)  # Parse the datetime string
+        if dt:
+            local_dt = localtime(dt)  # Convert to local time
+            return local_dt.strftime("%B %d, %Y %I:%M %p")  # Format as desired (e.g., October 10, 2024 10:36 AM)
+    return ""
