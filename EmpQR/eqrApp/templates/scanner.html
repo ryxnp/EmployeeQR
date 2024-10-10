@@ -59,13 +59,13 @@
     // Hide the modal
     $('.modal').modal('hide');
     // start_loader();
-    
+
     // Save the scanned content (which is the employee_code)
     const scannedData = content;
     const currentDateTime = new Date(); // Current date and time
     const formattedDateTime = currentDateTime.toISOString(); // ISO format for consistency
     const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1];
-    
+
     console.log("Current Date and Time:", formattedDateTime);
     console.log("Scanned Employee Code:", scannedData);
 
@@ -84,78 +84,76 @@
                 
                 const specificUser = data.find(user => user.employee_code === scannedData);
                 
-                if (specificUser) {
-                    console.log("Specific User Information:", specificUser);
-                    
-                    // Fetch log records based on employee_pk
-                    return fetch(`/api/logrecord/?employee_pk=${specificUser.id}`)
-                        .then(logResponse => {
-                            if (!logResponse.ok) {
-                                throw new Error('Failed to fetch log records');
-                            }
-                            return logResponse.json();
-                        })
-                        .then(logData => {
-                            if (logData) {
-                                // Get today's date in YYYY-MM-DD format
-                                const today = new Date().toISOString().split('T')[0];
-                                
-                                // Filter log records for today's date
-                                const todayRecords = logData.filter(record => {
-                                    const recordDate = new Date(record.time).toISOString().split('T')[0];
-                                    return recordDate === today && record.employee_pk === specificUser.id;
-                                });
-
-                                // Check for time-in and time-out records
-                                const timeInRecord = todayRecords.find(record => record.action === 'time_in');
-                                const timeOutRecord = todayRecords.find(record => record.action === 'time_out');
-
-                                if (timeInRecord && timeOutRecord) {
-                                    // Both time-in and time-out exist, throw an error
-                                    alert(`User ${specificUser.employee_code} has already signed in and out today.`);
-                                    throw new Error(`User ${specificUser.employee_code} has already signed in and out today.`);
-                                } else if (!timeInRecord && !timeOutRecord) {
-                                    // No records found, create a time-in record
-                                    const timeInRecord = {
-                                        employee_pk: specificUser.id,
-                                        action: 'time_in',
-                                        time: formattedDateTime // Use ISO format for consistency
-                                    };
-                                    console.log("Recording Time-In:", timeInRecord);
-                                    return fetch('/api/logrecord/', {
-                                        method: 'POST',
-                                        headers: { 
-                                            'Content-Type': 'application/json',
-                                            'X-CSRFToken': csrftoken
-                                        },
-                                        body: JSON.stringify(timeInRecord)
-                                    });
-                                } else if (timeInRecord && !timeOutRecord) {
-                                    // Time-in exists but no time-out, create a time-out record
-                                    const timeOutRecord = {
-                                        employee_pk: specificUser.id,
-                                        action: 'time_out',
-                                        time: formattedDateTime // Use ISO format for consistency
-                                    };
-                                    console.log("Recording Time-Out:", timeOutRecord);
-                                    return fetch('/api/logrecord/', {
-                                        method: 'POST',
-                                        headers: { 
-                                            'Content-Type': 'application/json',
-                                            'X-CSRFToken': csrftoken
-                                        },
-                                        body: JSON.stringify(timeOutRecord)
-                                    });
-                                }
-                            }
-                        })
-                        .then(() => {
-                            console.log("Log record successfully created.");
-                        });
-                } else {
-                    console.warn("No matching user found for employee code:", scannedData);
-                    alert(`No matching user found for employee code: ${scannedData}`);
+                if (!specificUser) {
+                    // Throw an error if no matching user is found
+                    alert(`QR Code not valid: No matching user found for employee code: ${scannedData}`);
+                    throw new Error(`QR Code not valid: No matching user found for employee code: ${scannedData}`);
                 }
+
+                console.log("Specific User Information:", specificUser);
+                
+                // Fetch log records based on employee_pk
+                return fetch(`/api/logrecord/?employee_pk=${specificUser.id}`)
+                    .then(logResponse => {
+                        if (!logResponse.ok) {
+                            throw new Error('Failed to fetch log records');
+                        }
+                        return logResponse.json();
+                    })
+                    .then(logData => {
+                        if (logData) {
+                            // Get today's date in YYYY-MM-DD format
+                            const today = new Date().toISOString().split('T')[0];
+                            
+                            // Filter log records for today's date
+                            const todayRecords = logData.filter(record => {
+                                const recordDate = new Date(record.time).toISOString().split('T')[0];
+                                return recordDate === today && record.employee_pk === specificUser.id;
+                            });
+
+                            // Check for time-in and time-out records
+                            const timeInRecord = todayRecords.find(record => record.action === 'time_in');
+                            const timeOutRecord = todayRecords.find(record => record.action === 'time_out');
+
+                            if (timeInRecord && timeOutRecord) {
+                                alert(`User ${specificUser.employee_code} has already signed in and out today.`);
+                                throw new Error(`User ${specificUser.employee_code} has already signed in and out today.`);
+                            } else if (!timeInRecord && !timeOutRecord) {
+                                const timeInRecord = {
+                                    employee_pk: specificUser.id,
+                                    action: 'time_in',
+                                    time: formattedDateTime // Use ISO format for consistency
+                                };
+                                console.log("Recording Time-In:", timeInRecord);
+                                return fetch('/api/logrecord/', {
+                                    method: 'POST',
+                                    headers: { 
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': csrftoken
+                                    },
+                                    body: JSON.stringify(timeInRecord)
+                                });
+                            } else if (timeInRecord && !timeOutRecord) {
+                                const timeOutRecord = {
+                                    employee_pk: specificUser.id,
+                                    action: 'time_out',
+                                    time: formattedDateTime // Use ISO format for consistency
+                                };
+                                console.log("Recording Time-Out:", timeOutRecord);
+                                return fetch('/api/logrecord/', {
+                                    method: 'POST',
+                                    headers: { 
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': csrftoken
+                                    },
+                                    body: JSON.stringify(timeOutRecord)
+                                });
+                            }
+                        }
+                    })
+                    .then(() => {
+                        console.log("Log record successfully created.");
+                    });
             })
             .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);
@@ -165,7 +163,6 @@
                 stop_loader(); // Stop loading animation if applicable
             });
     }, 500);
-
 });
     // Checks for available cameras. 
     $('#uni_modal').on('shown.bs.modal', function() {
