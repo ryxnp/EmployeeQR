@@ -8,13 +8,15 @@ from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 
+from django.http import JsonResponse
+from django.utils import timezone
 
 
 def context_data():
     context = {
         'page_name' : '',
         'page_title' : 'Chat Room',
-        'system_name' : 'Employee ID with QR Code Generator',
+        'system_name' : 'Employee Logs',
         'topbar' : True,
         'footer' : True,
     }
@@ -163,3 +165,20 @@ def employee_attendance(request, code = None):
         context['employee'] = models.Employee.objects.get(employee_code=code)
         return render(request, 'employee_attendance.html', context)
 
+@login_required
+def employee_record(request, code = None):
+    if code is None:
+        return HttpResponse("Employee record is Invalid")
+    else:
+        context = context_data()
+        context['employee'] = models.LogRecord.objects.get(employee_code=code)
+        return render(request, 'employee_attendance.html', context)
+
+@login_required
+def view_record(request, code = None):
+    if code is None:
+        return HttpResponse("Employee code is Invalid")
+    else:
+        context = context_data()
+        context['employee'] = models.LogRecord.objects.get(employee_code=code)
+        return render(request, 'view_record.html', context)
