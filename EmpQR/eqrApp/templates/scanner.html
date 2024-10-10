@@ -1,16 +1,14 @@
 {% load qr_code %}{% load static %}
-<!-- <script src="{% static 'assets/default/js/jquery-3.6.0.min.js' %}"></script> -->
 <script src="{% static 'assets/instascan.min.js' %}"></script>
 
 <!-- CSS Config -->
- 
 <style>
     #uni_modal .modal-footer {
-        display: none
+        display: none;
     }
     
     #uni_modal .modal-sub-footer {
-        display: flex
+        display: flex;
     }
     
     #scanner {
@@ -34,20 +32,15 @@
 </style>
 
 <!-- HTML Config -->
-
 <div class="container-fluid">
     <div id="scanner-holder" class="position-relative">
         <video id="scanner"></video>
-        <div id="scanner-focus" class="position-absolute">
-
-        </div>
+        <div id="scanner-focus" class="position-absolute"></div>
     </div>
 </div>
 
 <script>
-
     // Initializes the Scanner & Stream Handling
-
     const args = {
         video: document.getElementById('scanner'),
         mirror: false
@@ -60,89 +53,103 @@
 
     const scanner = new Instascan.Scanner(args);
     
-    // Scab Listener: When a QR code is scanned, this listener triggers
-
+    // Scan Listener: When a QR code is scanned, this listener triggers
     scanner.addListener('scan', function(content) {
-    // Hide the modal
-    $('.modal').modal('hide');
-    start_loader();
-    
-    // Save the scanned content (which is the employee_code)
-    const scannedData = content;
-    
-    const currentDateTime = new Date(); // This gets the current date and time
-    const formattedDateTime = currentDateTime.toLocaleString();
+        // Hide the modal
+        $('.modal').modal('hide');
+        start_loader();
+        
+        // Save the scanned content (which is the employee_code)
+        const scannedData = content;
+        const currentDateTime = new Date(); // This gets the current date and time
+        const formattedDateTime = currentDateTime.toISOString(); // Use ISO format for consistency
+        const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1];
+        
+        console.log("Current Date and Time:", formattedDateTime);
+        console.log("Scanned Employee Code:", scannedData);
 
-// If you want to format it as a string, you can use toLocaleString or other methods
-    console.log("Current Date and Time:", formattedDateTime);
-
-    // Log the scanned data for verification
-    console.log("Scanned Employee Code:", scannedData);
-
-    // Set a timeout to allow for any necessary loading
-    setTimeout(() => {
-        // Make an API call to fetch user information
-        fetch(`/api/employee/?employee_code=${scannedData}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Log the fetched user data for verification
-                console.log("Fetched User Data:", data);
-                
-                // Check if necessary information is present and filter for specific user
-                const specificUser = data.find(user => user.employee_code === scannedData); // Match employee_code
-                
-                if (specificUser) {
-                    console.log("Specific User Information:", specificUser);
+        // Set a timeout to allow for any necessary loading
+        setTimeout(() => {
+            // Make an API call to fetch user information
+            fetch(`/api/employee/?employee_code=${scannedData}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Fetched User Data:", data);
                     
-                    // Now fetch log records based on employee_pk (which corresponds to specificUser.id)
-                    return fetch(`/api/logrecord/?employee_pk=${specificUser.id}`)
-                        .then(logResponse => {
-                            if (!logResponse.ok) {
-                                throw new Error('Failed to fetch log records');
-                            }
-                            return logResponse.json();
-                        })
-                        .then(logData => {
-                            if (logData) {
-                                // Filter log records to only include those with the specific employee_pk
-                                const filteredLogRecords = logData.filter(record => record.employee_pk === specificUser.id);
-                                
-                                // Log the filtered log records for verification
-                                console.log("Filtered Log Records for Employee PK:", filteredLogRecords);
-                                
-                                // Further process filteredLogRecords as needed here
-                            }
-                        });
-                } else {
-                    console.warn("No matching user found for employee code:", scannedData);
-                }
-            })
-            .catch(error => {
-                console.error('There was a problem with the fetch operation:', error);
-            })
-            .finally(() => {
-                scanner.stop(); // Stop the scanner after processing
-                stop_loader(); // Stop loading animation if applicable
-            });
-    }, 500);
-});
-        // $('.modal').modal('hide')
-        // start_loader()
-        // setTimeout(() => {
-        //     uni_modal("QR Attendance Tracker", "{% url 'employee_attendance' %}/" + content, 'modal-md')
-        //     scanner.stop()
-        // }, 500)
+                    const specificUser = data.find(user => user.employee_code === scannedData);
+                    
+                    if (specificUser) {
+                        console.log("Specific User Information:", specificUser);
+                        
+                        // Fetch log records based on employee_pk
+                        return fetch(`/api/logrecord/?employee_pk=${specificUser.id}`)
+                            .then(logResponse => {
+                                if (!logResponse.ok) {
+                                    throw new Error('Failed to fetch log records');
+                                }
+                                return logResponse.json();
+                            })
+                            .then(logData => {
+                                if (logData) {
+                                    // Filter log records for today's date
+                                    const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+                                    const todayRecords = logData.filter(record => {
+                                        const recordDate = new Date(record.time).toISOString().split('T')[0]; // Assuming 'time' is in ISO format
+                                        return recordDate === today && record.employee_pk === specificUser.id;
+                                    });
+                                    
+                                    console.log("Today's Log Records for Employee PK:", todayRecords);
+                                    
+                                    // Check if there are existing records for today
+                                    if (todayRecords.length === 0) {
+                                        // No record found, create a time-in record
+                                        const timeInRecord = {
+                                            employee_pk: specificUser.id,
+                                            action: 'time_in',
+                                            time: formattedDateTime // Use ISO format for consistency
+                                        };
+                                        console.log("Recording Time-In:", timeInRecord);
+                                        return fetch('/api/logrecord/', {
+                                            method: 'POST',
+                                            headers: { 
+                                                'Content-Type': 'application/json',
+                                                'X-CSRFToken': csrftoken
+                                            },
+                                            body: JSON.stringify(timeInRecord)
+                                        });
+                                    } else {
+                                        // Existing record found, alert the user that they are already signed in
+                                        alert(`User ${specificUser.employee_code} is already signed in today.`);
+                                        throw new Error(`User ${specificUser.employee_code} is already signed in today.`);
+                                    }
+                                }
+                            })
+                            .then(() => {
+                                console.log("Log record successfully created.");
+                            });
+                    } else {
+                        console.warn("No matching user found for employee code:", scannedData);
+                    }
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                })
+                .finally(() => {
+                    scanner.stop(); // Stop the scanner after processing
+                    stop_loader(); // Stop loading animation if applicable
+                });
+        }, 500);
+    });
 
     // Checks for available cameras. 
-
     $('#uni_modal').on('shown.bs.modal', function() {
         if ($('#scanner').length > 0) {
-            scanner.stop()
+            scanner.stop();
             Instascan.Camera.getCameras().then(function(cameras) {
                 if (cameras.length > 0) {
                     scanner.start(cameras[0]);
@@ -153,8 +160,9 @@
                 console.error(e);
             });
         }
-    })
+    });
+
     $('#uni_modal').on('hide.bs.modal', function() {
-        scanner.stop()
-    })
+        scanner.stop();
+    });
 </script>

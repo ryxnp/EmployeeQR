@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'eqrApp.apps.eqrAppConfig',
     'qr_code',
+    'corsheaders',
 
     'rest_framework',
     'api',
@@ -53,6 +54,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",  # Adjust this to your frontend's URL
 ]
 
 ROOT_URLCONF = 'django_employee_qr.urls'

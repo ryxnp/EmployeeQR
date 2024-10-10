@@ -10,7 +10,7 @@ class EmployeeAdmin(admin.ModelAdmin):
 
 class LogRecordAdmin(admin.ModelAdmin):
     # Specify the fields to display in the list view
-    list_display = ('employee_pk', 'time')  # Adjust fields as necessary
+    list_display = ('employee_pk', 'action', 'time')  # Adjust fields as necessary
     # Specify the fields to filter by
     # list_filter = ('action')  # Adjust fields as necessary
 

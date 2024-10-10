@@ -46,7 +46,7 @@ class LogRecord(models.Model):
     ]
 
     employee_pk = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    action = models.CharField(max_length=10, choices=ACTION_CHOICES)  # Changed to CharField with choices
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
     time = models.DateTimeField()
     date_created = models.DateTimeField(auto_now_add=True)
 
