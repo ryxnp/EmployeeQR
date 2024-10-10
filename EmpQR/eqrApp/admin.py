@@ -1,8 +1,9 @@
 from django.contrib import admin
 from eqrApp import models
+from import_export.admin import ImportExportModelAdmin
 
 # Register your models here.
-class EmployeeAdmin(admin.ModelAdmin):
+class EmployeeAdmin(ImportExportModelAdmin):
     # Specify the fields to display in the list view
     list_display = ('employee_code', 'first_name', 'last_name', 'department', 'position')  # Adjust fields as necessary
     # Specify the fields to filter by
