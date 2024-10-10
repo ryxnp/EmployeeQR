@@ -6,8 +6,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import qrcode
 from PIL import Image
+from django.core.exceptions import ValidationError
 
-# Create your models here.
 class Employee(models.Model):
     employee_code = models.CharField(max_length=100, unique=True)
     first_name = models.CharField(max_length=250)
@@ -31,13 +31,18 @@ class Employee(models.Model):
 
 
     def save(self, *args, **kwargs):
-        super(Employee, self).save(*args, **kwargs)
-        print(self.avatar)
-        imag = Image.open(self.avatar.path)
-        if imag.width > 200 or imag.height> 200:
-            output_size = (200, 200)
-            imag.thumbnail(output_size)
-            imag.save(self.avatar.path)
+        if self.avatar:  # Ensure there's an avatar before processing
+            super(Employee, self).save(*args, **kwargs)  # Save first to get the path
+            try:
+                imag = Image.open(self.avatar.path)
+                if imag.width > 200 or imag.height > 200:
+                    output_size = (200, 200)
+                    imag.thumbnail(output_size)
+                    imag.save(self.avatar.path)
+            except Exception as e:
+                raise ValidationError(f"Error processing image: {e}")
+        else:
+            super(Employee, self).save(*args, **kwargs)  # Save without processing if no avatar
         
 class LogRecord(models.Model):
     ACTION_CHOICES = [
@@ -56,12 +61,5 @@ class LogRecord(models.Model):
     def print_time(self):
         """Return formatted string of time-in and time-out."""
         return self.time.strftime('%H:%M:%S')
-    
-# @receiver(post_save, sender=Employee)
-# def create_qr(sender, instance, **kwargs):
-#     code = instance.employee_code
-#     img = qrcode.make(code)
-#     instance.qr_path = img
-#     print(img)
-#     # instance.save()
+
 

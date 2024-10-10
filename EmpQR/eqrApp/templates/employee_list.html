@@ -51,7 +51,7 @@
                                         <ul class="dropdown-menu" aria-labelledby="employeeDD{{employee.pk}}">
                                             <li><a class="dropdown-item view_detail" href="javascript:void(0)" data-url="{% url 'view-details' employee.employee_code %}" >View Data</a></li>
                                             <li><a class="dropdown-item view_card" href="javascript:void(0)" data-url="{% url 'view-card' employee.pk %}" >View ID</a></li>
-                                            <li><a class="dropdown-item view_card" href="javascript:void(0)" data-url="{% url 'view-records' employee.pk %}" >View Record</a></li>
+                                            <li><a class="dropdown-item view_record" href="javascript:void(0)" data-url="{% url 'view-records' employee.pk %}" >View Record</a></li>
                                         </ul>
                                     </div>
                                 </td>
@@ -78,6 +78,9 @@
         })
         $('.view_detail').click(function(){
             uni_modal("View Employee Details", $(this).attr('data-url'),'modal-md')
+        })
+        $('.view_record').click(function(){
+            uni_modal("View Employee Records", $(this).attr('data-url'),'modal-xl')
         })
         $('#uni_modal').on('shown.bs.modal', function() {
             if ($('#id-card').length > 0) {

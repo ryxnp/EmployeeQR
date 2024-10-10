@@ -20,18 +20,17 @@ urlpatterns = [
     path('add_employee',views.manage_employee,name='add-employee'),
     path('edit_employee/<int:pk>',views.manage_employee,name='edit-employee'),
     path('save_employee',views.save_employee,name='save-employee'),
+
     path('view_card/<int:pk>',views.view_card,name='view-card'),
+
     path('view_details/<str:code>',views.view_details,name='view-details'),
     path('view_details',views.view_details,name='scanned-code'),
 
-    path('view_record/<str:code>',views.view_record,name='view-records'),
+    path('view_record/<int:pk>',views.view_record,name='view-records'),
     path('view_record',views.view_record,name='show-record'),
 
     path('scanner',views.view_scanner,name='view-scanner'),
     path('delete_employee/<int:pk>',views.delete_employee,name='delete-employee'),
-
-    path('employee_attendance/<str:code>',views.employee_attendance,name='attendance_view'),
-    path('employee_attendance',views.employee_attendance,name='employee_attendance'),
     
     #API
     path('api/employee/', EmployeeList.as_view(), name='employee-list'),
