@@ -2,11 +2,11 @@
 {% load humanize %} 
 {% load customfilter %} 
 {% block pageContent %}
+{% load static %}
 <style>
     .fixed-size {
-        width: 700px; /* Fixed width for the left column */
+        width: 100%; /* Fixed width for the left column */
         height: 500px; /* Full height */
-        background-color: #e9ecef; /* Light background for visibility */
         position: relative; /* Allow absolute positioning of status indicator */
     }
     .right-column {
@@ -36,6 +36,35 @@
             background-color: transparent;
         }
     }
+    #preview {
+        width: 50vh;
+        height: 50vh;
+        margin: 0px auto;
+        position: relative;
+        object-fit: cover;
+        object-position: center center;
+    }
+    
+    #preview-focus {
+        padding: 2%;
+        background: #00000085;
+        -webkit-clip-path: polygon(0% 0%, 0% 100%, 25% 100%, 25% 25%, 75% 25%, 75% 75%, 25% 75%, 25% 100%, 100% 100%, 100% 0%);
+        clip-path: polygon(0% 0%, 0% 100%, 25% 100%, 25% 25%, 75% 25%, 75% 75%, 25% 75%, 25% 100%, 100% 100%, 100% 0%);
+        height: 50vh;
+        width: 50vh;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        left: calc(50% - (50vh / 2)); /* Center horizontally */
+        margin-bottom: 20px;
+    }
+    #scanner-holder {
+        display: flex; /* Use Flexbox */
+        justify-content: center; /* Center horizontally */
+        align-items: center; /* Center vertically if needed */
+        height: 100%; /* Ensure it takes full height */
+        margin-bottom: 20px;
+    }
 </style>
 
 <!--Section: Content-->
@@ -46,36 +75,25 @@
         <div class="card rounded-0 shadow-sm blur">
             <div class="card-body">
                 <div class="container-fluid">
-                    <table class="table table-stripped table-bordered">
-                        <thead>
-
-                        </thead>
-                        <tbody>
-                            <div class="container-fluid">
-                                <div class="row">
-                                    <div class="col-auto fixed-size d-flex flex-column">
-                                        <!-- QR Code Scanner Box -->
-                                        <div id="qrScanner" style="flex: 1; background-color: #e9ecef;">
-                                            <p style="text-align:center; padding-top:30%;">QR Code Scanner</p>
-                                        </div>
-                                        <!-- Status Indicator Box -->
-                                        <span id="statusIndicator" class="status-indicator"></span>
-                                    </div>
-                                    <div class="col right-column d-flex flex-column">
-                                        <!-- Profile Picture Box -->
-                                        <div class="row flex-fill row-item">
-                                            <img src="your-image-url.jpg" alt="Profile Picture" class="img-fluid" style="height: auto; width: 80%;">
-                                        </div>
-                                        <!-- Additional Information Box -->
-                                        <div class="row flex-fill row-item d-flex flex-column justify-content-center align-items-center">
-                                            <div>Name</div>
-                                            <div>Date</div>
-                                        </div>
-                                    </div>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-auto fixed-size d-flex flex-column">
+                                <!-- QR Code Scanner Box -->
+                                <div id="scanner-holder" class="position-relative">
+                                    <video id="preview"></video>
+                                    <div id="preview-focus" class="position-absolute"></div>
                                 </div>
+                                <!-- Status Indicator Box -->
+                                <span id="statusIndicator" class="status-indicator"></span>
+                                <div class="row flex-fill row-item">
+                                    <img src="your-image-url.jpg" alt="Profile Picture" class="img-fluid" style="height: auto; width: 80%;">
+                                </div>
+                                <!-- Additional Information Box -->
+                                <div class="row flex-fill row-item">Name</div>
+                                <div class="row flex-fill row-item">Date</div>
                             </div>
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -85,10 +103,13 @@
 {% endblock pageContent %} 
 
 {% block ScriptBlock %}
+<script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 <script>
+    
     // Hard-coded scanner state
     const scannerState = 'active'; // Change this to 'inactive' or 'error' as needed
     const statusIndicator = document.getElementById('statusIndicator');
+    
 
     // Set initial status based on scanner state
     if (scannerState === 'active') {
@@ -101,13 +122,139 @@
         statusIndicator.classList.add('blinking'); // Add blinking effect for error
     }
 
+    // Initializes the Camera
+    function beginScan() {
+        let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
+      
+        scanner.addListener('scan', function (content) {
+        console.log(content);
+        const scannedData = content;
+        const currentDateTime = new Date(); // Current date and time
+        const formattedDateTime = currentDateTime.toISOString(); // ISO format for consistency
+        const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1];
+
+        console.log("Current Date and Time:", formattedDateTime);
+        console.log("Scanned Employee Code:", scannedData);
+
+        setTimeout(() => {
+        // Make an API call to fetch user information
+            fetch(`/api/employee/?employee_code=${scannedData}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Fetched User Data:", data);
+                    
+                    const specificUser = data.find(user => user.employee_code === scannedData);
+                    
+                    if (!specificUser) {
+                        // Throw an error if no matching user is found
+                        alert(`QR Code not valid: No matching user found for employee code: ${scannedData}`);
+                        throw new Error(`QR Code not valid: No matching user found for employee code: ${scannedData}`);
+                    }
+
+                    console.log("Specific User Information:", specificUser);
+                    
+                    // Fetch log records based on employee_pk
+                    return fetch(`/api/logrecord/?employee_pk=${specificUser.id}`)
+                        .then(logResponse => {
+                            if (!logResponse.ok) {
+                                throw new Error('Failed to fetch log records');
+                            }
+                            return logResponse.json();
+                        })
+                        .then(logData => {
+                            if (logData) {
+                                // Get today's date in YYYY-MM-DD format
+                                const today = new Date().toISOString().split('T')[0];
+                                
+                                // Filter log records for today's date
+                                const todayRecords = logData.filter(record => {
+                                    const recordDate = new Date(record.time).toISOString().split('T')[0];
+                                    return recordDate === today && record.employee_pk === specificUser.id;
+                                });
+
+                                // Check for time-in and time-out records
+                                const timeInRecord = todayRecords.find(record => record.action === 'time_in');
+                                const timeOutRecord = todayRecords.find(record => record.action === 'time_out');
+
+                                if (timeInRecord && timeOutRecord) {
+                                    alert(`User ${specificUser.employee_code} has already signed in and out today.`);
+                                    throw new Error(`User ${specificUser.employee_code} has already signed in and out today.`);
+                                } else if (!timeInRecord && !timeOutRecord) {
+                                    const timeInRecord = {
+                                        employee_pk: specificUser.id,
+                                        action: 'time_in',
+                                        time: formattedDateTime // Use ISO format for consistency
+                                    };
+                                    console.log("Recording Time-In:", timeInRecord);
+                                    return fetch('/api/logrecord/', {
+                                        method: 'POST',
+                                        headers: { 
+                                            'Content-Type': 'application/json',
+                                            'X-CSRFToken': csrftoken
+                                        },
+                                        body: JSON.stringify(timeInRecord)
+                                    });
+                                } else if (timeInRecord && !timeOutRecord) {
+                                    const timeOutRecord = {
+                                        employee_pk: specificUser.id,
+                                        action: 'time_out',
+                                        time: formattedDateTime // Use ISO format for consistency
+                                    };
+                                    console.log("Recording Time-Out:", timeOutRecord);
+                                    return fetch('/api/logrecord/', {
+                                        method: 'POST',
+                                        headers: { 
+                                            'Content-Type': 'application/json',
+                                            'X-CSRFToken': csrftoken
+                                        },
+                                        body: JSON.stringify(timeOutRecord)
+                                    });
+                                }
+                            }
+                        })
+                        .then(() => {
+                            console.log("Log record successfully created.");
+                        });
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                })
+                .finally(() => {
+                    console.log("Scanning Success")
+                });
+        }, 500);
+      });
+
+      Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length > 0) {
+          scanner.start(cameras[0]);
+        } else {
+          console.error('No cameras found.');
+        }
+      }).catch(function (e) {
+        console.error(e);
+      });
+    }
+
     function startScanner() {
         console.log("Scanner started");
+        beginScan();
     }
 
     function stopScanner() {
         console.log("Scanner stopped");
+        if (scanner) {
+            scanner.stop(); // Stop the scanner
+        } else {
+            console.warn("No active scanner to stop.");
+        }
     }
+
 
     // Initialize scanner based on state
     if (scannerState === 'active') {
