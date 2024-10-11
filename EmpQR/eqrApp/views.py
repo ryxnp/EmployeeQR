@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from django.http import JsonResponse
 import requests
@@ -71,10 +72,26 @@ def logout_user(request):
 
 @login_required
 def employee_list(request):
-    context =context_data()
+    context = context_data()
     context['page'] = 'employee_list'
     context['page_title'] = 'Employee List'
-    context['employees'] = models.Employee.objects.all()
+    
+    # Fetch all employees
+    employee_list = models.Employee.objects.all()
+    
+    # Set up pagination
+    paginator = Paginator(employee_list, 10)  # Show 10 employees per page
+    page_number = request.GET.get('page', 1)  # Get the current page number from the request
+    
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)  # If page is not an integer, deliver first page
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)  # If page is out of range, deliver last page
+
+    context['employees'] = page_obj  # Update context to include paginated employees
+    context['total_employees'] = paginator.count  # Total number of employees
 
     return render(request, 'employee_list.html', context)
 
