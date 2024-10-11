@@ -17,6 +17,7 @@ urlpatterns = [
     path('home',views.home,name='home-page'),
     path('logout',views.logout_user,name='logout'),
     path('employee_list',views.employee_list,name='employee-page'),
+    path('base_scanner',views.base_scanner,name='scanner-page'),
     path('add_employee',views.manage_employee,name='add-employee'),
     path('edit_employee/<int:pk>',views.manage_employee,name='edit-employee'),
     path('save_employee',views.save_employee,name='save-employee'),

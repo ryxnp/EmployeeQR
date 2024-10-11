@@ -1,0 +1,121 @@
+{% extends "base.html" %} 
+{% load humanize %} 
+{% load customfilter %} 
+{% block pageContent %}
+<style>
+    .fixed-size {
+        width: 700px; /* Fixed width for the left column */
+        height: 500px; /* Full height */
+        background-color: #e9ecef; /* Light background for visibility */
+        position: relative; /* Allow absolute positioning of status indicator */
+    }
+    .right-column {
+        flex: 1; /* Allow the right column to take remaining space */
+    }
+    .row-item {
+        height: 50%; /* Each row takes half of the right column */
+        background-color: #e9ecef; /* Light gray for visibility */
+        border: 1px solid #dee2e6; /* Border for separation */
+        display: flex; /* Use flexbox for centering */
+        align-items: center; /* Center vertically */
+        justify-content: center; /* Center horizontally */
+    }
+    .status-indicator {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        position: absolute; /* Position above the profile picture */
+        top: 10px;
+        left: 10px;
+    }
+    .blinking {
+        animation: blink-animation 0.5s steps(5, start) infinite;
+    }
+    @keyframes blink-animation {
+        to {
+            background-color: transparent;
+        }
+    }
+</style>
+
+<!--Section: Content-->
+<h3 class="fw-bolder">{{page_title}}</h3>
+<hr>
+<section class="py-3">
+    <div class="container">
+        <div class="card rounded-0 shadow-sm blur">
+            <div class="card-body">
+                <div class="container-fluid">
+                    <table class="table table-stripped table-bordered">
+                        <thead>
+
+                        </thead>
+                        <tbody>
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-auto fixed-size d-flex flex-column">
+                                        <!-- QR Code Scanner Box -->
+                                        <div id="qrScanner" style="flex: 1; background-color: #e9ecef;">
+                                            <p style="text-align:center; padding-top:30%;">QR Code Scanner</p>
+                                        </div>
+                                        <!-- Status Indicator Box -->
+                                        <span id="statusIndicator" class="status-indicator"></span>
+                                    </div>
+                                    <div class="col right-column d-flex flex-column">
+                                        <!-- Profile Picture Box -->
+                                        <div class="row flex-fill row-item">
+                                            <img src="your-image-url.jpg" alt="Profile Picture" class="img-fluid" style="height: auto; width: 80%;">
+                                        </div>
+                                        <!-- Additional Information Box -->
+                                        <div class="row flex-fill row-item d-flex flex-column justify-content-center align-items-center">
+                                            <div>Name</div>
+                                            <div>Date</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock pageContent %} 
+
+{% block ScriptBlock %}
+<script>
+    // Hard-coded scanner state
+    const scannerState = 'active'; // Change this to 'inactive' or 'error' as needed
+    const statusIndicator = document.getElementById('statusIndicator');
+
+    // Set initial status based on scanner state
+    if (scannerState === 'active') {
+        statusIndicator.style.backgroundColor = 'green'; // Active state
+        statusIndicator.classList.add('blinking');
+    } else if (scannerState === 'inactive') {
+        statusIndicator.style.backgroundColor = 'red'; // Inactive state
+    } else if (scannerState === 'error') {
+        statusIndicator.style.backgroundColor = 'red'; // Error state
+        statusIndicator.classList.add('blinking'); // Add blinking effect for error
+    }
+
+    function startScanner() {
+        console.log("Scanner started");
+    }
+
+    function stopScanner() {
+        console.log("Scanner stopped");
+    }
+
+    // Initialize scanner based on state
+    if (scannerState === 'active') {
+        startScanner();
+    } else if (scannerState === 'inactive') {
+        stopScanner();
+    } else if (scannerState === 'error') {
+        console.error("Scanner error detected");
+    }
+</script>
+{% endblock ScriptBlock %}

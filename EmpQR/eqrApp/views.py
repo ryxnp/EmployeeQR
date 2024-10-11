@@ -78,6 +78,15 @@ def employee_list(request):
 
     return render(request, 'employee_list.html', context)
 
+@login_required
+def base_scanner(request):
+    context =context_data()
+    context['page'] = 'base_scanner'
+    context['page_title'] = 'Scan Code Here'
+    context['employees'] = models.Employee.objects.all()
+
+    return render(request, 'base_scanner.html', context)
+
 @login_required 
 def manage_employee(request, pk=None):
     context =context_data()
@@ -159,15 +168,15 @@ def delete_employee(request, pk=None):
 
     return HttpResponse(json.dumps(resp), content_type="application/json")
 
-@login_required
-def view_record(request, pk=None):
-    if pk is None:
-        return HttpResponse("Employee code is Invalid")
-    else:
-        context = context_data()
-        # Use get_object_or_404 to handle missing records
-        context['logrecord'] = get_object_or_404(models.LogRecord, employee_pk=pk)
-        return render(request, 'view_record.html', context)
+# @login_required
+# def view_record(request, pk=None):
+#     if pk is None:
+#         return HttpResponse("Employee code is Invalid")
+#     else:
+#         context = context_data()
+#         # Use get_object_or_404 to handle missing records
+#         context['logrecord'] = get_object_or_404(models.LogRecord, employee_pk=pk)
+#         return render(request, 'view_record.html', context)
 
 # @login_required
 # def view_record(request, pk = None):
