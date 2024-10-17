@@ -171,6 +171,8 @@
             const formattedDateTime = currentDateTime.toISOString();
             const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1];
 
+            const hardCodedLocation = 'location_1'; // Change this value per PC
+
             fetch(`/api/employee/?employee_code=${scannedData}`)
                 .then(response => {
                     if (!response.ok) {
@@ -187,7 +189,7 @@
                     }
 
                     // Update user info display
-                    updateUserInfo(specificUser); // Call updateUserInfo to set name, date, and avatar
+                    updateUserInfo(specificUser);
 
                     // Fetch log records based on employee_pk
                     return fetch(`/api/logrecord/?employee_pk=${specificUser.id}`)
@@ -211,7 +213,12 @@
                                 showAlert(`User ${specificUser.employee_code} has already signed in and out today.`, 'warning');
                                 throw new Error(`User ${specificUser.employee_code} has already signed in and out today.`);
                             } else if (!timeInRecord && !timeOutRecord) {
-                                const timeInRecord = { employee_pk: specificUser.id, action: 'time_in', time: formattedDateTime };
+                                const timeInRecord = { 
+                                    employee_pk: specificUser.id, 
+                                    action: 'time_in', 
+                                    time: formattedDateTime,
+                                    location: hardCodedLocation
+                                };
                                 return fetch('/api/logrecord/', {
                                     method: 'POST',
                                     headers: { 
@@ -221,7 +228,12 @@
                                     body: JSON.stringify(timeInRecord)
                                 }).then(() => showAlert(`Successfully recorded time-in for ${specificUser.first_name}.`, 'success'));
                             } else if (timeInRecord && !timeOutRecord) {
-                                const timeOutRecord = { employee_pk: specificUser.id, action: 'time_out', time: formattedDateTime };
+                                const timeOutRecord = { 
+                                    employee_pk: specificUser.id, 
+                                    action: 'time_out', 
+                                    time: formattedDateTime,
+                                    location: hardCodedLocation
+                                };
                                 return fetch('/api/logrecord/', {
                                     method: 'POST',
                                     headers: { 

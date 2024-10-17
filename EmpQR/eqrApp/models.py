@@ -49,10 +49,18 @@ class LogRecord(models.Model):
         ('time_in', 'Time In'),
         ('time_out', 'Time Out'),
     ]
+    LOCATION_CHOICES = [
+        ('location_1', 'Location 1'),
+        ('location_2', 'Location 2'),
+        ('location_3', 'Location 3'),
+        ('location_4', 'Location 4'),
+        ('location_5', 'Location 5'),
+    ]
 
     employee_pk = models.ForeignKey(Employee, on_delete=models.CASCADE)
     action = models.CharField(max_length=10, choices=ACTION_CHOICES)
     time = models.DateTimeField()
+    location = models.CharField(max_length=10, choices=LOCATION_CHOICES, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
