@@ -63,6 +63,12 @@
         height: 100%; /* Ensure it takes full height */
         margin-bottom: 20px;
     }
+    .avatar {
+        width: 100px; /* Set desired width */
+        height: 100px; /* Set desired height */
+        object-fit: cover; /* Ensures the image covers the area without distortion */
+        border-radius: 4%; /* Optional: makes the image circular */
+    }
 </style>
 
 <!--Section: Content-->
@@ -84,7 +90,7 @@
                             <!-- Status Indicator Box -->
                             <span id="statusIndicator" class="status-indicator"></span>
                             <div class="row flex-fill row-item">
-                                <img id="avatarDisplay" src="" alt="Profile Picture" class="img-fluid" style="height:auto; width:auto;">
+                                <img id="avatarDisplay" src="" alt="Profile Picture" class="img-fluid avatar">
                             </div>
                             <!-- Additional Information Box -->
                             <div class="row flex-fill row-item" id="nameDisplay"> </div>
@@ -102,11 +108,10 @@
 {% block ScriptBlock %}
 <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
 <script>
-    
     // Hard-coded scanner state
-    const scannerState = 'inactive'; // Change this to 'inactive' or 'error' as needed
+    const scannerState = 'active'; // Change this to 'inactive' or 'error' as needed
     const statusIndicator = document.getElementById('statusIndicator');
-    
+
     // Set initial status based on scanner state
     if (scannerState === 'active') {
         statusIndicator.style.backgroundColor = 'green'; // Active state
@@ -120,143 +125,152 @@
 
     // Initializes the Camera
     function beginScan() {
-    let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
-    
-    const showAlert = (message, type) => {
-        const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
-        
-        // Clear previous alerts
-        alertPlaceholder.innerHTML = '';
-        
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = [
-            `<div class="alert alert-${type} alert-dismissible" role="alert">`,
-            ` <div>${message}</div>`,
-            ' <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-            '</div>'
-        ].join('');
-        
-        alertPlaceholder.append(wrapper);
-    };
+        let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
 
-    const formatDateTime = (date) => {
-          const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true };
-          return new Intl.DateTimeFormat('en-US', options).format(date);
-      };
+        const showAlert = (message, type) => {
+            const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
 
-    const updateUserInfo = (user) => {
-        document.getElementById('nameDisplay').innerText = user.first_name;
-        document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString();
-    };
+            // Clear previous alerts
+            alertPlaceholder.innerHTML = '';
 
-    
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = [
+                `<div class="alert alert-${type} alert-dismissible" role="alert">`,
+                ` <div>${message}</div>`,
+                ' <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+                '</div>'
+            ].join('');
 
-    const processScan = (scannedData) => {
-        const currentDateTime = new Date();
-        const formattedDateTime = currentDateTime.toISOString();
-        const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1];
+            alertPlaceholder.append(wrapper);
+        };
 
-        fetch(`/api/employee/?employee_code=${scannedData}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                const specificUser = data.find(user => user.employee_code === scannedData);
-                
-                if (!specificUser) {
-                    showAlert(`QR Code not valid: No matching user found for employee code: ${scannedData}`, 'danger');
-                    throw new Error(`QR Code not valid: No matching user found for employee code: ${scannedData}`);
-                }
+        const formatDateTime = (date) => {
+            const options = { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true 
+            };
+            return new Intl.DateTimeFormat('en-US', options).format(date);
+        };
 
-                // Update user info display
-                document.getElementById('nameDisplay').innerText = `${specificUser.first_name} ${specificUser.middle_name || ''} ${specificUser.last_name}`;
-                document.getElementById('dateDisplay').innerText = formatDateTime(currentDateTime);
+        const updateUserInfo = (user) => {
+            const fullName = [user.first_name, user.middle_name, user.last_name].filter(Boolean).join(' ');
+            document.getElementById('nameDisplay').innerText = fullName;
+            document.getElementById('dateDisplay').innerText = formatDateTime(new Date());
+            // Update profile picture
+            const avatarDisplay = document.getElementById('avatarDisplay');
+            avatarDisplay.src = user.avatar; // Ensure this URL is correct
+        };
 
-                // Fetch log records based on employee_pk
-                return fetch(`/api/logrecord/?employee_pk=${specificUser.id}`)
-                    .then(logResponse => {
-                        if (!logResponse.ok) {
-                            throw new Error('Failed to fetch log records');
-                        }
-                        return logResponse.json();
-                    })
-                    .then(logData => {
-                        const today = new Date().toISOString().split('T')[0];
-                        const todayRecords = logData.filter(record => {
-                            const recordDate = new Date(record.time).toISOString().split('T')[0];
-                            return recordDate === today && record.employee_pk === specificUser.id;
+        const processScan = (scannedData) => {
+            const currentDateTime = new Date();
+            const formattedDateTime = currentDateTime.toISOString();
+            const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1];
+
+            fetch(`/api/employee/?employee_code=${scannedData}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const specificUser = data.find(user => user.employee_code === scannedData);
+
+                    if (!specificUser) {
+                        showAlert(`QR Code not valid: No matching user found for ${scannedData}`, 'danger');
+                        throw new Error(`QR Code not valid: No matching user found for employee code: ${scannedData}`);
+                    }
+
+                    // Update user info display
+                    updateUserInfo(specificUser); // Call updateUserInfo to set name, date, and avatar
+
+                    // Fetch log records based on employee_pk
+                    return fetch(`/api/logrecord/?employee_pk=${specificUser.id}`)
+                        .then(logResponse => {
+                            if (!logResponse.ok) {
+                                throw new Error('Failed to fetch log records');
+                            }
+                            return logResponse.json();
+                        })
+                        .then(logData => {
+                            const today = new Date().toISOString().split('T')[0];
+                            const todayRecords = logData.filter(record => {
+                                const recordDate = new Date(record.time).toISOString().split('T')[0];
+                                return recordDate === today && record.employee_pk === specificUser.id;
+                            });
+
+                            const timeInRecord = todayRecords.find(record => record.action === 'time_in');
+                            const timeOutRecord = todayRecords.find(record => record.action === 'time_out');
+
+                            if (timeInRecord && timeOutRecord) {
+                                showAlert(`User ${specificUser.employee_code} has already signed in and out today.`, 'warning');
+                                throw new Error(`User ${specificUser.employee_code} has already signed in and out today.`);
+                            } else if (!timeInRecord && !timeOutRecord) {
+                                const timeInRecord = { employee_pk: specificUser.id, action: 'time_in', time: formattedDateTime };
+                                return fetch('/api/logrecord/', {
+                                    method: 'POST',
+                                    headers: { 
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': csrftoken
+                                    },
+                                    body: JSON.stringify(timeInRecord)
+                                }).then(() => showAlert(`Successfully recorded time-in for ${specificUser.first_name}.`, 'success'));
+                            } else if (timeInRecord && !timeOutRecord) {
+                                const timeOutRecord = { employee_pk: specificUser.id, action: 'time_out', time: formattedDateTime };
+                                return fetch('/api/logrecord/', {
+                                    method: 'POST',
+                                    headers: { 
+                                        'Content-Type': 'application/json',
+                                        'X-CSRFToken': csrftoken
+                                    },
+                                    body: JSON.stringify(timeOutRecord)
+                                }).then(() => showAlert(`Successfully recorded time-out for ${specificUser.first_name}.`, 'success'));
+                            }
                         });
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                })
+                .finally(() => {
+                    setTimeout(() => scanner.start(), 500); // Restart scanning after processing
+                });
+        };
 
-                        const timeInRecord = todayRecords.find(record => record.action === 'time_in');
-                        const timeOutRecord = todayRecords.find(record => record.action === 'time_out');
+        scanner.addListener('scan', function (content) {
+            processScan(content);
+        });
 
-                        if (timeInRecord && timeOutRecord) {
-                            showAlert(`User ${specificUser.employee_code} has already signed in and out today.`, 'warning');
-                            throw new Error(`User ${specificUser.employee_code} has already signed in and out today.`);
-                        } else if (!timeInRecord && !timeOutRecord) {
-                            const timeInRecord = { employee_pk: specificUser.id, action: 'time_in', time: formattedDateTime };
-                            return fetch('/api/logrecord/', {
-                                method: 'POST',
-                                headers: { 
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': csrftoken
-                                },
-                                body: JSON.stringify(timeInRecord)
-                            }).then(() => showAlert(`Successfully recorded time-in for ${specificUser.first_name}.`, 'success'));
-                        } else if (timeInRecord && !timeOutRecord) {
-                            const timeOutRecord = { employee_pk: specificUser.id, action: 'time_out', time: formattedDateTime };
-                            return fetch('/api/logrecord/', {
-                                method: 'POST',
-                                headers: { 
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': csrftoken
-                                },
-                                body: JSON.stringify(timeOutRecord)
-                            }).then(() => showAlert(`Successfully recorded time-out for ${specificUser.first_name}.`, 'success'));
-                        }
-                    });
-            })
-            .catch(error => {
-                console.error('There was a problem with the fetch operation:', error);
-            })
-            .finally(() => {
-                setTimeout(() => scanner.start(), 500); // Restart scanning after processing
-            });
-    };
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 0) {
+                scanner.start(cameras[0]);
+            } else {
+                console.error('No cameras found.');
+            }
+        }).catch(function (e) {
+            console.error(e);
+        });
+    }
 
-    scanner.addListener('scan', function (content) {
-        processScan(content);
-    });
+    function startScanner() {
+        console.log("Scanner started");
+        beginScan();
+    }
 
-    Instascan.Camera.getCameras().then(function (cameras) {
-        if (cameras.length > 0) {
-            scanner.start(cameras[0]);
-        } else {
-            console.error('No cameras found.');
-        }
-    }).catch(function (e) {
-        console.error(e);
-    });
-}
+    function stopScanner() {
+        console.log("Scanner stopped");
+    }
 
-function startScanner() {
-    console.log("Scanner started");
-    beginScan();
-}
-
-function stopScanner() {
-    console.log("Scanner stopped");
-}
-
-if (scannerState === 'active') {
-    startScanner();
-} else if (scannerState === 'inactive') {
-    stopScanner();
-} else if (scannerState === 'error') {
-    console.error("Scanner error detected");
-}
+    if (scannerState === 'active') {
+        startScanner();
+    } else if (scannerState === 'inactive') {
+        stopScanner();
+    } else if (scannerState === 'error') {
+        console.error("Scanner error detected");
+    }
 </script>
 {% endblock ScriptBlock %}
