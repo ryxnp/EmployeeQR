@@ -8,6 +8,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from api.views import EmployeeList, EmployeeDetail, LogRecordList, LogRecordDetail
+from .views import upload_images
 
 urlpatterns = [
     path('qr_code/', include('qr_code.urls', namespace="qr_code")),
@@ -38,4 +39,5 @@ urlpatterns = [
     path('api/employee/<int:pk>/', EmployeeDetail.as_view(), name='employee-detail'),
     path('api/logrecord/', LogRecordList.as_view(), name='logrecord-list'),
     path('api/logrecord/<int:pk>/', LogRecordDetail.as_view(), name='logrecord-detail'),
+    path('upload/', upload_images, name='upload_images'),
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

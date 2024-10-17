@@ -10,6 +10,12 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+from django.core.files.storage import FileSystemStorage
+from django.shortcuts import render, redirect
+
+from .models import Employee
+import pandas as pd
+
 from django.http import JsonResponse
 import requests
 
@@ -253,3 +259,17 @@ def format_datetime(datetime_str):
             local_dt = localtime(dt)  # Convert to local time
             return local_dt.strftime("%B %d, %Y %I:%M %p")  # Format as desired (e.g., October 10, 2024 10:36 AM)
     return ""
+
+def upload_images(request):
+    if request.method == 'POST' and request.FILES.getlist('images'):
+        images = request.FILES.getlist('images')
+        
+        fs = FileSystemStorage(location='media/employee-avatars/')
+        
+        for image in images:
+            fs.save(image.name, image)  # Saves to media/employee-avatars/<image_name>
+        
+        return redirect('upload.html')  # Redirect after successful upload
+
+    return render(request, 'upload.html')
+
