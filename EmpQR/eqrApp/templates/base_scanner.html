@@ -142,6 +142,10 @@
             ].join('');
 
             alertPlaceholder.append(wrapper);
+
+            setTimeout(() => {
+                alertPlaceholder.innerHTML = '';
+            }, 5000); // 5000 milliseconds = 5 seconds
         };
 
         const formatDateTime = (date) => {
@@ -166,11 +170,21 @@
             avatarDisplay.src = user.avatar; // Ensure this URL is correct
         };
 
+        let isCooldown = false; // Flag to track cooldown state
+        const cooldownDuration = 3000; // Cooldown duration in milliseconds (5 seconds)
+
         const processScan = (scannedData) => {
+            if (isCooldown) {
+                showAlert('Please wait before scanning again.', 'warning');
+                return; // Exit if in cooldown
+            }
+
+            // Set cooldown flag
+            isCooldown = true;
+
             const currentDateTime = new Date();
             const formattedDateTime = currentDateTime.toISOString();
             const csrftoken = document.cookie.split('; ').find(row => row.startsWith('csrftoken=')).split('=')[1];
-
             const hardCodedLocation = 'location_1'; // Change this value per PC
 
             fetch(`/api/employee/?employee_code=${scannedData}`)
@@ -213,7 +227,7 @@
                                 showAlert(`User ${specificUser.employee_code} has already signed in and out today.`, 'warning');
                                 throw new Error(`User ${specificUser.employee_code} has already signed in and out today.`);
                             } else if (!timeInRecord && !timeOutRecord) {
-                                const timeInRecord = { 
+                                const timeInRecordData = { 
                                     employee_pk: specificUser.id, 
                                     action: 'time_in', 
                                     time: formattedDateTime,
@@ -225,10 +239,10 @@
                                         'Content-Type': 'application/json',
                                         'X-CSRFToken': csrftoken
                                     },
-                                    body: JSON.stringify(timeInRecord)
+                                    body: JSON.stringify(timeInRecordData)
                                 }).then(() => showAlert(`Successfully recorded time-in for ${specificUser.first_name}.`, 'success'));
                             } else if (timeInRecord && !timeOutRecord) {
-                                const timeOutRecord = { 
+                                const timeOutRecordData = { 
                                     employee_pk: specificUser.id, 
                                     action: 'time_out', 
                                     time: formattedDateTime,
@@ -240,7 +254,7 @@
                                         'Content-Type': 'application/json',
                                         'X-CSRFToken': csrftoken
                                     },
-                                    body: JSON.stringify(timeOutRecord)
+                                    body: JSON.stringify(timeOutRecordData)
                                 }).then(() => showAlert(`Successfully recorded time-out for ${specificUser.first_name}.`, 'success'));
                             }
                         });
@@ -249,7 +263,14 @@
                     console.error('There was a problem with the fetch operation:', error);
                 })
                 .finally(() => {
-                    setTimeout(() => scanner.start(), 500); // Restart scanning after processing
+                    // Reset the cooldown after the specified duration
+                    setTimeout(() => {
+                        isCooldown = false; // Allow scanning again
+                        document.getElementById('nameDisplay').innerText = '';
+                        document.getElementById('dateDisplay').innerText = '';
+                        document.getElementById('avatarDisplay').src = ''; // Reset avatar image
+                        scanner.start(); // Restart scanning after processing
+                    }, cooldownDuration);
                 });
         };
 
