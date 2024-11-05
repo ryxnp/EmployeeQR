@@ -4,6 +4,7 @@
 {% block pageContent %}
 {% load static %}
 <style>
+    
     .fixed-size {
         width: 100%; /* Fixed width for the left column */
         height: 500px; /* Full height */
@@ -13,7 +14,7 @@
         flex: 1; /* Allow the right column to take remaining space */
     }
     .row-item {
-        height: 50%; /* Each row takes half of the right column */
+        flex-grow: 1; /* Allow row items to grow based on content */
         background-color: #e9ecef; /* Light gray for visibility */
         border: 1px solid #dee2e6; /* Border for separation */
         display: flex; /* Use flexbox for centering */
@@ -66,8 +67,28 @@
     .avatar {
         width: 100px; /* Set desired width */
         height: 100px; /* Set desired height */
-        object-fit: cover; /* Ensures the image covers the area without distortion */
-        border-radius: 4%; /* Optional: makes the image circular */
+        object-fit: contain; /* Ensures the image covers the area without distortion */
+        border-radius: 5%; /* Optional: makes the image circular */
+        
+    }
+    .content {
+        display: flex; /* Use flexbox for layout */
+        flex-direction: column; /* Stack items vertically */
+        align-items: center; /* Center items horizontally */
+        padding-top: 3%;
+    }
+    .input-group {
+        display: flex; /* Use flexbox for horizontal alignment */
+        align-items: center; /* Center items vertically */
+    }
+
+    .form-control {
+        flex: 1; /* Allow input field to take remaining space */
+        margin-right: 10px; /* Add space between input and button */
+    }
+
+    .btn {
+        /* Optional: You can add additional styles for the button here */
     }
 </style>
 
@@ -76,31 +97,53 @@
 <div id="liveAlertPlaceholder"></div>
 <hr>
 <section class="py-3">
-    <div class="container">
-        <div class="card rounded-0 shadow-sm blur">
+    <div class="row">
+        <div class="col-sm-6">
+          <div class="card">
             <div class="card-body">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-auto fixed-size d-flex flex-column">
-                            <!-- QR Code Scanner Box -->
-                            <div id="scanner-holder" class="position-relative">
-                                <video id="preview"></video>
-                                <div id="preview-focus" class="position-absolute"></div>
-                            </div>
-                            <!-- Status Indicator Box -->
-                            <span id="statusIndicator" class="status-indicator"></span>
-                            <div class="row flex-fill row-item">
-                                <img id="avatarDisplay" src="" alt="Profile Picture" class="img-fluid avatar">
-                            </div>
-                            <!-- Additional Information Box -->
-                            <div class="row flex-fill row-item" id="nameDisplay"> </div>
-                            <div class="row flex-fill row-item" id="dateDisplay"> </div>
-                        </div>
+                <!-- <div class="col-md-12">
+                    <div class="input-group">
+                        <input type="text" id="employeeIdInput" placeholder="Enter Employee ID" class="form-control" />
+                        <button id="processButton" class="btn btn-primary">Process</button>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="row flex-fill row-item">
+                        <img id="avatarDisplay" src="media/employee-avatars/default.png" alt="Profile Picture" class="img-fluid avatar">
+                        <div class="row flex-fill row-item" id="nameDisplay">Name: </div>
+                        <div class="row flex-fill row-item" id="dateDisplay">Time: </div> 
+                    </div>
+                </div> -->
+                
+              <!-- QR Code Scanner Box -->
+                <div id="scanner-holder" class="position-relative">
+                    <video id="preview"></video>
+                    <div id="preview-focus" class="position-absolute"></div>
+                </div>
+                <span id="statusIndicator" class="status-indicator"></span>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="card">
+            <div class="card-body">
+                 <div class="col-md-12">
+                    <div class="input-group">
+                        <input type="text" id="employeeIdInput" placeholder="Enter Employee ID" class="form-control" />
+                        <button id="processButton" class="btn btn-primary">Process</button>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="row flex-fill row-item">
+                        <img id="avatarDisplay" src="media/employee-avatars/default.png" alt="Profile Picture" class="img-fluid avatar">
+                        <div class="row flex-fill row-item" id="nameDisplay">Name: </div>
+                        <div class="row flex-fill row-item" id="dateDisplay">Time: </div> 
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+          </div>
+        </div> 
+      </div>
 </section>
 
 {% endblock pageContent %} 
@@ -127,27 +170,6 @@
     function beginScan() {
         let scanner = new Instascan.Scanner({ video: document.getElementById('preview'), mirror: false });
 
-        const showAlert = (message, type) => {
-            const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
-
-            // Clear previous alerts
-            alertPlaceholder.innerHTML = '';
-
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = [
-                `<div class="alert alert-${type} alert-dismissible" role="alert">`,
-                ` <div>${message}</div>`,
-                ' <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
-                '</div>'
-            ].join('');
-
-            alertPlaceholder.append(wrapper);
-
-            setTimeout(() => {
-                alertPlaceholder.innerHTML = '';
-            }, 5000); // 5000 milliseconds = 5 seconds
-        };
-
         const formatDateTime = (date) => {
             const options = { 
                 year: 'numeric', 
@@ -170,16 +192,60 @@
             avatarDisplay.src = user.avatar; // Ensure this URL is correct
         };
 
-        let isCooldown = false; // Flag to track cooldown state
-        const cooldownDuration = 3000; // Cooldown duration in milliseconds (5 seconds)
+        // Function to process the employee ID input
+        const processInput = () => {
+            const scannedData = document.getElementById('employeeIdInput').value.trim();
+            if (scannedData) {
+                processScan(scannedData); // Call processScan with the entered employee ID
+            } else {
+                showAlert('Please enter a valid Employee ID.', 'danger');
+            }
+        };
 
+        // Event listener for the button click
+        document.getElementById('processButton').addEventListener('click', processInput);
+
+        let isCooldown = false; // Flag to track scanning cooldown state
+        const scanCooldownDuration = 500; // Cooldown duration for scanning (0.5 seconds)
+        const clearCooldownDuration = 5000; // Timeout duration for clearing alerts and data (5 seconds)
+
+        let clearContentTimeout; // Variable to hold the timeout ID for clearing content
+
+        const showAlert = (message, type) => {
+            const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
+            
+            // Clear previous alerts
+            alertPlaceholder.innerHTML = '';
+            
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = [
+                `<div class="alert alert-${type} alert-dismissible" role="alert">`,
+                ` <div>${message}</div>`,
+                ' <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+                '</div>'
+            ].join('');
+            
+            alertPlaceholder.append(wrapper);
+
+            // Clear previous timeout if it exists
+            clearTimeout(clearContentTimeout);
+            
+            // Set a timeout to remove the alert and clear content after a specified duration
+            clearContentTimeout = setTimeout(() => {
+                alertPlaceholder.innerHTML = ''; // Clear the alert
+                document.getElementById('nameDisplay').innerText = 'Name: '; // Clear name display
+                document.getElementById('dateDisplay').innerText = 'Time: '; // Clear date display
+                document.getElementById('avatarDisplay').src = 'media/employee-avatars/default.png'; // Reset avatar image
+            }, clearCooldownDuration); // Use combined cooldown duration
+        };
+        
         const processScan = (scannedData) => {
             if (isCooldown) {
                 showAlert('Please wait before scanning again.', 'warning');
                 return; // Exit if in cooldown
             }
 
-            // Set cooldown flag
+            // Set scanning cooldown flag
             isCooldown = true;
 
             const currentDateTime = new Date();
@@ -214,19 +280,12 @@
                             return logResponse.json();
                         })
                         .then(logData => {
-                            const today = new Date().toISOString().split('T')[0];
-                            const todayRecords = logData.filter(record => {
-                                const recordDate = new Date(record.time).toISOString().split('T')[0];
-                                return recordDate === today && record.employee_pk === specificUser.id;
-                            });
-
+                            const todayRecords = logData.filter(record => record.employee_pk === specificUser.id);
                             const timeInRecord = todayRecords.find(record => record.action === 'time_in');
                             const timeOutRecord = todayRecords.find(record => record.action === 'time_out');
 
-                            if (timeInRecord && timeOutRecord) {
-                                showAlert(`User ${specificUser.employee_code} has already signed in and out today.`, 'warning');
-                                throw new Error(`User ${specificUser.employee_code} has already signed in and out today.`);
-                            } else if (!timeInRecord && !timeOutRecord) {
+                            // If there is no time-in record, allow time-in
+                            if (!timeInRecord) {
                                 const timeInRecordData = { 
                                     employee_pk: specificUser.id, 
                                     action: 'time_in', 
@@ -241,7 +300,10 @@
                                     },
                                     body: JSON.stringify(timeInRecordData)
                                 }).then(() => showAlert(`Successfully recorded time-in for ${specificUser.first_name}.`, 'success'));
-                            } else if (timeInRecord && !timeOutRecord) {
+                            } 
+                            
+                            // If there is a time-in record but no time-out record, allow time-out
+                            else if (timeInRecord && !timeOutRecord) {
                                 const timeOutRecordData = { 
                                     employee_pk: specificUser.id, 
                                     action: 'time_out', 
@@ -256,6 +318,12 @@
                                     },
                                     body: JSON.stringify(timeOutRecordData)
                                 }).then(() => showAlert(`Successfully recorded time-out for ${specificUser.first_name}.`, 'success'));
+                            } 
+
+                            // If both records exist, alert the user
+                            else if (timeInRecord && timeOutRecord) {
+                                showAlert(`User ${specificUser.employee_code} has already signed in and out.`, 'warning');
+                                throw new Error(`User ${specificUser.employee_code} has already signed in and out.`);
                             }
                         });
                 })
@@ -263,14 +331,9 @@
                     console.error('There was a problem with the fetch operation:', error);
                 })
                 .finally(() => {
-                    // Reset the cooldown after the specified duration
                     setTimeout(() => {
-                        isCooldown = false; // Allow scanning again
-                        document.getElementById('nameDisplay').innerText = '';
-                        document.getElementById('dateDisplay').innerText = '';
-                        document.getElementById('avatarDisplay').src = ''; // Reset avatar image
-                        scanner.start(); // Restart scanning after processing
-                    }, cooldownDuration);
+                        isCooldown = false; // Allow scanning again after 0.5 seconds
+                    }, scanCooldownDuration);
                 });
         };
 
@@ -278,6 +341,7 @@
             processScan(content);
         });
 
+        // Initialize scanner on page load (if needed)
         Instascan.Camera.getCameras().then(function (cameras) {
             if (cameras.length > 0) {
                 scanner.start(cameras[0]);

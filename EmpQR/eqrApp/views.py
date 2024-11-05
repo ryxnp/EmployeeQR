@@ -105,7 +105,7 @@ def employee_list(request):
 def base_scanner(request):
     context =context_data()
     context['page'] = 'base_scanner'
-    context['page_title'] = 'Scan Code Here'
+    context['page_title'] = 'FEU Scanner'
     context['employees'] = models.Employee.objects.all()
 
     return render(request, 'base_scanner.html', context)
