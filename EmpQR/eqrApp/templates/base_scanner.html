@@ -1,8 +1,17 @@
-{% extends "base.html" %} 
+
 {% load humanize %} 
 {% load customfilter %} 
 {% block pageContent %}
 {% load static %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'assets/default/css/style.css' %}">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/js/all.min.js" integrity="sha512-6PM0qYu5KExuNcKt5bURAoT6KCThUmHRewN3zUFNaoI6Di7XJPTMoT6K0nsagZKk2OB4L7E3q1uQKHNHd4stIQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{% static 'assets/default/js/jquery-3.6.0.min.js' %}"></script>
+    <script src="{% static 'assets/bootstrap/js/popper.min.js' %}"></script>
+    <script src="{% static 'assets/bootstrap/js/bootstrap.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'assets/default/js/script.js' %}"></script>
 <style>
     
     .fixed-size {
@@ -87,64 +96,54 @@
         margin-right: 10px; /* Add space between input and button */
     }
 
-    .btn {
-        /* Optional: You can add additional styles for the button here */
+    .template {
+        margin-left: 7%;
+        margin-right: 7%;
+        margin-top: 2%;
     }
 </style>
 
 <!--Section: Content-->
-<h3 class="fw-bolder">{{page_title}}</h3>
-<div id="liveAlertPlaceholder"></div>
-<hr>
-<section class="py-3">
-    <div class="row">
-        <div class="col-sm-6">
-          <div class="card">
-            <div class="card-body">
-                <!-- <div class="col-md-12">
-                    <div class="input-group">
-                        <input type="text" id="employeeIdInput" placeholder="Enter Employee ID" class="form-control" />
-                        <button id="processButton" class="btn btn-primary">Process</button>
+<div class="template">
+    <h3 class="fw-bolder">{{page_title}}</h3>
+    <div id="liveAlertPlaceholder"></div>
+    <hr>
+    <section class="py-3">
+        <div class="row">
+            <div class="col-sm-6">
+              <div class="card">
+                <div class="card-body">
+                  <!-- QR Code Scanner Box -->
+                    <div id="scanner-holder" class="position-relative">
+                        <video id="preview"></video>
+                        <div id="preview-focus" class="position-absolute"></div>
                     </div>
+                    <span id="statusIndicator" class="status-indicator"></span>
                 </div>
-                <div class="content">
-                    <div class="row flex-fill row-item">
-                        <img id="avatarDisplay" src="media/employee-avatars/default.png" alt="Profile Picture" class="img-fluid avatar">
-                        <div class="row flex-fill row-item" id="nameDisplay">Name: </div>
-                        <div class="row flex-fill row-item" id="dateDisplay">Time: </div> 
-                    </div>
-                </div> -->
-                
-              <!-- QR Code Scanner Box -->
-                <div id="scanner-holder" class="position-relative">
-                    <video id="preview"></video>
-                    <div id="preview-focus" class="position-absolute"></div>
-                </div>
-                <span id="statusIndicator" class="status-indicator"></span>
+              </div>
             </div>
-          </div>
-        </div>
-        <div class="col-sm-6">
-          <div class="card">
-            <div class="card-body">
-                 <div class="col-md-12">
-                    <div class="input-group">
-                        <input type="text" id="employeeIdInput" placeholder="Enter Employee ID" class="form-control" />
-                        <button id="processButton" class="btn btn-primary">Process</button>
+            <div class="col-sm-6">
+              <div class="card">
+                <div class="card-body">
+                     <div class="col-md-12">
+                        <div class="input-group">
+                            <input type="text" id="employeeIdInput" placeholder="Enter Employee ID" class="form-control" />
+                            <button id="processButton" class="btn btn-primary">Process</button>
+                        </div>
+                    </div>
+                    <div class="content">
+                        <div class="row flex-fill row-item">
+                            <img id="avatarDisplay" src="media/employee-avatars/default.png" alt="Profile Picture" class="img-fluid avatar">
+                            <div class="row flex-fill row-item" id="nameDisplay">Name: </div>
+                            <div class="row flex-fill row-item" id="dateDisplay">Time: </div> 
+                        </div>
                     </div>
                 </div>
-                <div class="content">
-                    <div class="row flex-fill row-item">
-                        <img id="avatarDisplay" src="media/employee-avatars/default.png" alt="Profile Picture" class="img-fluid avatar">
-                        <div class="row flex-fill row-item" id="nameDisplay">Name: </div>
-                        <div class="row flex-fill row-item" id="dateDisplay">Time: </div> 
-                    </div>
-                </div>
-            </div>
+              </div>
+            </div> 
           </div>
-        </div> 
-      </div>
-</section>
+    </section> 
+</div>
 
 {% endblock pageContent %} 
 
